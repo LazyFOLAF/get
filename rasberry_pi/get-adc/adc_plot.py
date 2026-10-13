@@ -16,7 +16,7 @@ def plot_voltage_vs_time(time, voltage, max_voltage):
     figure = plt.figure(figsize=(10, 6))
     plt.plot(time, voltage, marker="o", markersize=3, linewidth=1)
 
-    plt.title("Напряжение на входе АЦП последовательного счёта")
+    plt.title("Напряжение на входе АЦП")
     plt.xlabel("Время, с")
     plt.ylabel("Напряжение, В")
 
@@ -45,7 +45,7 @@ def plot_sampling_period_hist(time):
     figure = plt.figure(figsize=(10, 6))
     plt.hist(sampling_periods)
 
-    plt.title("Распределение периодов измерений АЦП последовательного счёта")
+    plt.title("Распределение периодов измерений АЦП")
     plt.xlabel("Период измерений, с")
     plt.ylabel("Количество интервалов")
     plt.xlim(0, 0.06)
