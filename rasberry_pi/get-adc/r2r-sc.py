@@ -1,8 +1,8 @@
-"""Задание 2: измерение напряжения АЦП ПС и построение графика U(t)."""
+"""Задания 2 и 3: график напряжения АЦП ПС и гистограмма периодов."""
 
 import time
 
-from adc_plot import plot_voltage_vs_time
+from adc_plot import plot_sampling_period_hist, plot_voltage_vs_time
 from r2r_adc import R2R_ADC
 
 
@@ -34,6 +34,7 @@ def main():
 
         print(f"Получено измерений: {len(voltage_values)}")
         plot_voltage_vs_time(time_values, voltage_values, DYNAMIC_RANGE)
+        plot_sampling_period_hist(time_values)
 
     except KeyboardInterrupt:
         print("\nИзмерения остановлены.")
