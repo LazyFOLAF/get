@@ -1,4 +1,4 @@
-"""Задание 1: 8-битный АЦП последовательного счёта на плате get-adc."""
+"""8-битный АЦП последовательного счёта и приближения на плате get-adc."""
 
 import time
 
@@ -69,6 +69,31 @@ class R2R_ADC:
         number = self.sequential_counting_adc()
         return number / self.max_number * self.dynamic_range
 
+    def successive_approximation_adc(self):
+        """Определить код за 8 сравнений, начиная со старшего бита."""
+        number = 0
+
+        for bit in range(len(self.bits_gpio) - 1, -1, -1):
+            # Пробуем установить очередной бит, сохраняя уже найденные.
+            trial_number = number | (1 << bit)
+            self.number_to_dac(trial_number)
+            time.sleep(self.compare_time)
+
+            # HIGH означает U_ЦАП > U_вход: пробный бит оставляем нулём.
+            # При LOW пробный код не превышает вход, поэтому сохраняем бит.
+            if GPIO.input(self.comp_gpio) == GPIO.LOW:
+                number = trial_number
+
+        # После отклонения последнего пробного бита на ЦАП мог остаться
+        # пробный код. Выводим именно итоговый результат преобразования.
+        self.number_to_dac(number)
+        return number
+
+    def get_sar_voltage(self):
+        """Измерить напряжение методом последовательного приближения."""
+        number = self.successive_approximation_adc()
+        return number / self.max_number * self.dynamic_range
+
 
 if __name__ == "__main__":
     # 3.3 В — пример. Замените на измеренное мультиметром U_ЦАП(255).
@@ -77,10 +102,10 @@ if __name__ == "__main__":
     adc = None
     try:
         adc = R2R_ADC(DYNAMIC_RANGE)
-        print("Измерение напряжения. Для остановки нажмите Ctrl+C.")
+        print("АЦП последовательного приближения. Для остановки нажмите Ctrl+C.")
 
         while True:
-            voltage = adc.get_sc_voltage()
+            voltage = adc.get_sar_voltage()
             print(f"Напряжение: {voltage:.3f} В", flush=True)
 
     except KeyboardInterrupt:
