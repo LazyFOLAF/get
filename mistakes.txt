@@ -1,10 +1,12 @@
-hon/debugpy/launcher 41907 -- "/home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver (1).py" 
-10-битный АЦП MCP3021. Для остановки нажмите Ctrl+C.
-Traceback (most recent call last):
-  File "/home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver (1).py", line 64, in <module>
-    voltage = adc.get_voltage()
-  File "/home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver (1).py", line 49, in get_voltage
-    number = self.get_number()
-  File "/home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver (1).py", line 29, in get_number
-    data = self.bus.read_word_data(self.address, 0)
-TimeoutError: [Errno 110] Connection timed out
+b03-602@raspberrypi:~ $ i2cdetect -y 1
+     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+00:          03 -- -- -- -- -- -- -- -- -- -- -- -- 
+10: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+20: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+30: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+40: -- -- -- -- -- -- -- -- -- -- -- -- -- 4d -- -- 
+50: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+60: -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- 
+70: -- -- -- -- -- -- -- --                         
+b03-602@raspberrypi:~ $ i2ctransfer -y 1 r2@0x4d
+0x09 0xf8
