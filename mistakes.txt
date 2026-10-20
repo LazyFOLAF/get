@@ -1,10 +1,10 @@
-hon/debugpy/launcher 46063 -- /home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver.py 
+hon/debugpy/launcher 41907 -- "/home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver (1).py" 
 10-битный АЦП MCP3021. Для остановки нажмите Ctrl+C.
 Traceback (most recent call last):
-  File "/home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver.py", line 64, in <module>
+  File "/home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver (1).py", line 64, in <module>
     voltage = adc.get_voltage()
-  File "/home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver.py", line 49, in get_voltage
+  File "/home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver (1).py", line 49, in get_voltage
     number = self.get_number()
-  File "/home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver.py", line 29, in get_number
+  File "/home/b03-602/Repositories/get/rasberry_pi/get-adc/mcp3021_driver (1).py", line 29, in get_number
     data = self.bus.read_word_data(self.address, 0)
-OSError: [Errno 5] Input/output error
+TimeoutError: [Errno 110] Connection timed out
