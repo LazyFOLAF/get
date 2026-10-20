@@ -32,8 +32,10 @@ def plot_voltage_vs_time(time, voltage, max_voltage):
     return figure
 
 
-def plot_sampling_period_hist(time):
+def plot_sampling_period_hist(time, max_period=0.06):
     """Построить гистограмму интервалов между соседними измерениями."""
+    if max_period is not None and max_period <= 0:
+        raise ValueError("Верхняя граница периода должна быть положительной")
     if len(time) < 2:
         print("Для гистограммы нужны хотя бы два момента измерений.")
         return
@@ -43,12 +45,21 @@ def plot_sampling_period_hist(time):
         sampling_periods.append(time[i] - time[i - 1])
 
     figure = plt.figure(figsize=(10, 6))
-    plt.hist(sampling_periods)
+
+    if max_period is None:
+        # Для быстрого I2C-АЦП масштаб выбирается по фактическим периодам.
+        largest_period = max(sampling_periods)
+        right_limit = largest_period * 1.05 if largest_period > 0 else 1.0
+        # Явный диапазон корректно отображает и одинаковые периоды.
+        plt.hist(sampling_periods, bins=10, range=(0, right_limit))
+    else:
+        right_limit = max_period
+        plt.hist(sampling_periods)
 
     plt.title("Распределение периодов измерений АЦП")
     plt.xlabel("Период измерений, с")
     plt.ylabel("Количество интервалов")
-    plt.xlim(0, 0.06)
+    plt.xlim(0, right_limit)
 
     plt.grid(True)
     plt.tight_layout()
