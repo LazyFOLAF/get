@@ -2,7 +2,7 @@
 
 import time
 
-from smbus2 import SMBus, i2c_msg
+import smbus
 
 
 class MCP3021:
@@ -16,7 +16,7 @@ class MCP3021:
         self.address = 0x4D
         self.verbose = verbose
         self.resolution = 10
-        self.bus = SMBus(1)
+        self.bus = smbus.SMBus(1)
 
     def deinit(self):
         """Закрыть шину I2C."""
@@ -24,18 +24,17 @@ class MCP3021:
 
     def get_number(self):
         """Прочитать два байта MCP3021 и вернуть код от 0 до 1023."""
-        # MCP3021 читает результат без предварительной записи регистра.
-        # Оба байта принимаются за одну транзакцию и относятся к одному коду.
-        message = i2c_msg.read(self.address, 2)
-        self.bus.i2c_rdwr(message)
-        upper_data_byte, lower_data_byte = list(message)
+        # Чтение в соответствии с шаблоном задания.
+        # SMBus помещает первый принятый байт в младшие биты слова.
+        data = self.bus.read_word_data(self.address, 0)
+        lower_data_byte = (data >> 8) & 0xFF
+        upper_data_byte = data & 0xFF
 
         # Первый байт: 0000 D9 D8 D7 D6.
         # Второй байт: D5 D4 D3 D2 D1 D0 X X.
         number = ((upper_data_byte & 0x0F) << 6) | (lower_data_byte >> 2)
 
         if self.verbose:
-            data = (upper_data_byte << 8) | lower_data_byte
             print(
                 f"Принятые данные: 0x{data:04X}; "
                 f"первый байт: 0x{upper_data_byte:02X}; "
