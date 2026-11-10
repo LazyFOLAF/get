@@ -153,6 +153,19 @@ def nonnegative_number(text):
     return value
 
 
+def check_input(adc, vref):
+    """Показать сырые байты, код АЦП и напряжение без запуска опыта."""
+    print("Прямое чтение MCP3021. Нажимайте и отпускайте кнопку RC-платы.")
+    print("Для выхода нажмите Ctrl+C. CSV в этом режиме не создаётся.")
+    while True:
+        number = adc.get_number()
+        first, second = adc.last_bytes
+        voltage = number / 1024 * vref
+        print(f"RAW: 0x{first:02X} 0x{second:02X}; "
+              f"код: {number:4d}; U: {voltage:.4f} В", flush=True)
+        time.sleep(0.2)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--vref", type=positive_number, default=5.0,
@@ -167,6 +180,8 @@ def main(argv=None):
                         help="секунды записи после запуска; без параметра — до Ctrl+C")
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT,
                         help="выходной CSV; по умолчанию data.csv рядом со скриптом")
+    parser.add_argument("--check", action="store_true",
+                        help="показать сырые байты, код и напряжение без записи CSV")
     args = parser.parse_args(argv)
     if args.period < 0.001:
         parser.error("--period должен быть не менее 0.001 с")
@@ -179,11 +194,14 @@ def main(argv=None):
     exit_code = 0
     try:
         adc = MCP3021(args.vref)
-        # Первое чтение также выбирает рабочий способ обмена с АЦП.
-        adc.get_voltage()
-        collect_data(adc, samples, period=args.period,
-                     trigger_delta=args.trigger, pretrigger=args.pretrigger,
-                     duration=args.duration)
+        if args.check:
+            check_input(adc, args.vref)
+        else:
+            # Первое прямое чтение выполняется до ожидания нажатия.
+            adc.get_voltage()
+            collect_data(adc, samples, period=args.period,
+                         trigger_delta=args.trigger, pretrigger=args.pretrigger,
+                         duration=args.duration)
     except KeyboardInterrupt:
         print("\nИзмерения остановлены.")
     except (OSError, ValueError) as error:
@@ -208,7 +226,7 @@ def main(argv=None):
             except (OSError, ValueError) as error:
                 print(f"Не удалось сохранить данные: {error}", file=sys.stderr)
                 exit_code = 1
-        else:
+        elif not args.check:
             print("Изменение напряжения не обнаружено; новый CSV не создан.")
     return exit_code
 

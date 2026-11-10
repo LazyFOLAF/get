@@ -1,4 +1,4 @@
-"""Задание 7: драйвер 10-битного АЦП MCP3021 на шине I2C."""
+"""Драйвер MCP3021: прямое чтение двух байтов по I2C без байта команды."""
 
 import errno
 import fcntl
@@ -22,6 +22,7 @@ class MCP3021:
         self.bus = smbus.SMBus(1)
         self._raw_fd = None
         self._closed = False
+        self.last_bytes = None
 
     def deinit(self):
         """Закрыть все открытые дескрипторы I2C."""
@@ -36,38 +37,29 @@ class MCP3021:
             self.bus.close()
 
     def _read_bytes(self):
-        """Чтение по шаблону, при отказе — прямое чтение I2C в Linux."""
+        """Один прямой запрос чтения двух байтов, как i2ctransfer r2@0x4d."""
         if self._closed:
             raise ValueError("Шина I2C уже закрыта")
 
         if self._raw_fd is None:
+            # SMBus-объект сохранён для совместимости с прежним классом.
+            # MCP3021 передаёт данные без предварительной записи команды,
+            # поэтому чтение выполняется через интерфейс i2c-dev Linux.
+            fd = os.open("/dev/i2c-1", os.O_RDWR)
             try:
-                word = self.bus.read_word_data(self.address, 0)
-            except OSError as error:
-                if error.errno not in (errno.EIO, errno.EREMOTEIO, errno.ETIMEDOUT):
-                    raise
-                # MCP3021 не имеет регистра 0. read_word_data() посылает
-                # командный байт, который АЦП может не подтвердить.
-                # Обычный smbus не предоставляет прямого чтения двух байтов.
-                # Для этого используем стандартный интерфейс i2c-dev Linux.
-                fd = os.open("/dev/i2c-1", os.O_RDWR)
-                try:
-                    fcntl.ioctl(fd, 0x0703, self.address)  # I2C_SLAVE
-                except BaseException:
-                    os.close(fd)
-                    raise
-                self._raw_fd = fd
-                if self.verbose:
-                    print("Переключение на прямое чтение двух байтов I2C.")
-            else:
-                # SMBus помещает первый принятый байт в младшие биты слова.
-                return word & 0xFF, (word >> 8) & 0xFF
+                fcntl.ioctl(fd, 0x0703, self.address)  # I2C_SLAVE
+            except BaseException:
+                os.close(fd)
+                raise
+            self._raw_fd = fd
 
         # Оба байта одной выборки читаются ОДНИМ запросом без байта команды.
+        self.last_bytes = None
         data = os.read(self._raw_fd, 2)
         if len(data) != 2:
             raise OSError(errno.EIO, "MCP3021 вернул менее двух байтов")
-        return data[0], data[1]
+        self.last_bytes = (data[0], data[1])
+        return self.last_bytes
 
     def get_number(self):
         """Прочитать два байта MCP3021 и вернуть код от 0 до 1023."""
